@@ -6,6 +6,7 @@ This is the canonical instruction file for coding agents working in this reposit
 
 - `backend_api_python/`: Flask API, services, trading runtime, migrations, and backend tests.
 - `mcp_server/`: the tenant-scoped MCP client/server package backed by QuantDinger APIs.
+- `qd-scripts/`: the `qd-scripts` Git submodule archiving final indicator and Strategy API V2 artifacts delivered through MCP.
 - `docs/`: product, architecture, deployment, API, Agent Gateway, and trading documentation.
 - `docker-compose*.yml` and `scripts/`: deployment topology and lifecycle tooling.
 - Frontend source is maintained outside this repository. The prebuilt frontend image is configured by the `frontend` service in `docker-compose.yml`.
@@ -19,6 +20,15 @@ Read only the documentation relevant to the change:
 - Runtime ownership, concurrency, Kafka, workers, or durable state: [architecture index](docs/architecture/README.md) and the task-specific document it links.
 - HTTP contracts: [API conventions](docs/architecture/API_CONVENTIONS.md) and the applicable OpenAPI document.
 - Installation or operations: the root [README](README.md) and the applicable guide under `docs/deployment/`.
+
+## MCP-delivered artifact archive
+
+- `qd-scripts/indicators/` stores final chart-only indicator Python saved through MCP. `qd-scripts/strategies/` stores final Strategy API V2 sources saved through MCP. Use one stable file per artifact, named `<mcp-id>-<kebab-name>.py`.
+- For a requested tenant indicator or strategy deliverable, MCP is the delivery system and source of truth. Do not persist that tenant artifact by changing the backend factor registry or another backend catalog instead of saving it through MCP.
+- Before saving, validate chart indicators with `validate_indicator_code` or compile Strategy API V2 code with `compile_strategy_code`. Save or update only through the corresponding MCP tool and a unique idempotency key.
+- After every successful MCP save or update, immediately read the canonical artifact back (`get_indicator` or `get_strategy_source`), replace the matching `qd-scripts` file with the exact returned code, and publish that file with `qd-scripts/publish.sh`. The script commits only supplied `indicators/` or `strategies/` paths and pushes the submodule branch.
+- Never hand-edit an archived MCP artifact into a divergent copy. If the source needs another change, change and save it through MCP first, then replace the archive from the canonical MCP response.
+- After publishing a new submodule commit, stage the `qd-scripts` gitlink in this repository so the parent references the published artifact commit.
 
 ## Architecture and contract invariants
 

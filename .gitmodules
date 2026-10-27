@@ -1,0 +1,5 @@
+[submodule "qd-scripts"]
+	path = qd-scripts
+	url = https://git.3y3f3t.com/football/qd-scripts.git
+	branch = main
+	update = checkout
